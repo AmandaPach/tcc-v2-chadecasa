@@ -1,0 +1,335 @@
+<script>
+  async function salvarFuncionario() {
+    const form = document.querySelector("#modal-funcionario form");
+    const formData = new FormData(form);
+    const response = await fetch('{% url "funcionario:list" %}', {
+      method: "POST",
+      body: formData,
+    });
+    if (response.ok) {
+      window.location.reload();
+      return;
+    }
+    if (response.status == 400) {
+      const responseText = await response.text();
+      alert(responseText);
+      return;
+    }
+  }
+
+  async function editarFuncionario(funcionarioID) {
+    const response = await fetch(
+      `{% url "funcionario:manage" 0 %}`.replace("0", funcionarioID)
+    );
+
+    if (!response.ok) {
+      alert("Erro ao buscar Funcionário");
+      return;
+    }
+
+    const funcionarioResponse = response.json();
+    funcionarioResponse.then(funcionarioContent => {
+      $("#modal-funcionario").modal("show");
+
+      const form = document.querySelector("#modal-funcionario form");
+      for (const key in funcionarioContent) {
+        let input = form.querySelector(`#${key}`);
+        if (!input) {
+          input = form.querySelector(`[name=${key}_funcionario]`);
+        }
+        if (!input) {
+          console.log(`Campo ${key} não encontrado`);
+          continue;
+        }
+        if (input.type == "checkbox") {
+          input.checked = clienteContent[key] != 'False';
+          return;
+        }
+        input.value = funcionarioContent[key];
+      }
+    });
+  }
+
+  async function salvarCargo() {
+    const form = document.querySelector("#modal-cargo form");
+    const formData = new FormData(form);
+    const response = await fetch('{% url "funcionario:cargo-list" %}', {
+      method: "POST",
+      body: formData,
+    });
+
+    if (response.status == 400) {
+      const responseText = await response.text();
+      alert(responseText);
+      return;
+    }
+
+    const cargoSelect = document.querySelector("#cargo_id");
+    const newCargoOption = document.createElement("option");
+    const responseData = await response.json();
+    newCargoOption.textContent = responseData.nome_cargo;
+    newCargoOption.value = responseData.id;
+    cargoSelect.appendChild(newCargoOption);
+    cargoSelect.value = responseData.id;
+    abrirModal("#modal-funcionario");
+  }
+</script>
+
+<div class="modal fade" id="modal-funcionario" tabindex="2" role="dialog">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Cadastrar novo funcionário</h3>
+      </div>
+      <div class="modal-body">
+        <p class="lead">Preencha todos os campos obrigatórios!</p>
+        <form method="POST">
+          {% csrf_token %}
+          <input type="hidden" name="id" id="id">
+          <div class="fields row pb-3">
+            <div class="field col-6">
+              <label for="nome_funcionario">Nome</label>
+              <input
+                id="nome_funcionario"
+                type="text"
+                name="nome_funcionario"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="sobrenome_funcionario">Sobrenome</label>
+              <input
+                id="sobrenome_funcionario"
+                type="text"
+                name="sobrenome_funcionario"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="cargo_id">Cargo</label>
+              <select class="form-select" required id="cargo_id" name="cargo_id">
+                <option value="">Selecione um cargo</option>
+                {% for cargo in cargos %}
+                <option value="{{ cargo.id }}">{{ cargo.nome_cargo }}</option>
+                {% endfor %}
+                <option value="new">Novo cargo</option>
+              </select>
+            </div>
+            <div class="field col-6">
+              <label for="sexo_funcionario">Sexo</label>
+              <select
+                class="form-select"
+                required
+                id="sexo_funcionario"
+                name="sexo_funcionario"
+              >
+                <option value="">Selecione um sexo</option>
+                <option value="male">Masculino</option>
+                <option value="female">Feminino</option>
+                <option value="other">Outro</option>
+              </select>
+            </div>
+            <div class="field col-6">
+              <label for="telefone_funcionario">Telefone</label>
+              <input
+                id="telefone_funcionario"
+                type="phone"
+                data-type="phone"
+                name="telefone_funcionario"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="data_nascimento_funcionario"
+                >Data de nascimento</label
+              >
+              <input
+                id="data_nascimento_funcionario"
+                type="date"
+                data-type="pastdate"
+                name="data_nascimento_funcionario"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-4">
+              <label for="cpf_funcionario">CPF</label>
+              <input
+                id="cpf_funcionario"
+                data-type="cpf"
+                class="form-control"
+                name="cpf_funcionario"
+                type="text"
+              />
+            </div>
+            <div class="field col-4">
+              <label for="rg_funcionario">RG</label>
+              <input
+                id="rg_funcionario"
+                class="form-control"
+                name="rg_funcionario"
+                type="text"
+              />
+            </div>
+            <div class="field col-4 mt-4 pt-1">
+              <input
+                id="estrangeiro_funcionario"
+                type="checkbox"
+                class="form-check-input"
+                name="estrangeiro_funcionario"
+              />
+              <label for="estrangeiro_funcionario">Sou estrangeiro</label>
+            </div>
+            <div class="field col-6">
+              <label for="rua_funcionario">Rua</label>
+              <input
+                id="rua_funcionario"
+                type="text"
+                name="rua_funcionario"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="bairro_funcionario">Bairro</label>
+              <input
+                id="bairro_funcionario"
+                type="text"
+                name="bairro_funcionario"
+                class="form-control"
+              />
+            </div>
+            <div class="field col-6">
+              <label for="numero_rua_funcionario">Número</label>
+              <input
+                id="numero_rua_funcionario"
+                type="text"
+                name="numero_rua_funcionario"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="cep_funcionario">CEP</label>
+              <input
+                id="cep_funcionario"
+                type="text"
+                data-type="cep"
+                name="cep_funcionario"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="complemento_funcionario">Complemento</label>
+              <input
+                id="complemento_funcionario"
+                type="text"
+                name="complemento_funcionario"
+                class="form-control"
+              />
+            </div>
+            <div class="field col-6">
+              <label for="cidade_id">Cidade</label>
+              <select name="cidade_id" id="cidade_id" class="form-select" value="">
+                <option value="">Selecione uma cidade</option>
+                {% for cidade in cidades %}
+                  <option value="{{cidade.id}}">{{cidade.nome_cidade}}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <a
+          href="javascript:fecharModal('#modal-funcionario')"
+          class="btn btn-secondary"
+          >Cancelar</a
+        >
+        <button
+          type="button"
+          onclick="salvarFuncionario()"
+          class="btn btn-success"
+        >
+          Salvar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modal-cargo" tabindex="2" role="dialog">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Cadastrar novo cargo</h3>
+      </div>
+      <div class="modal-body">
+        <p class="lead">Preencha todos os campos obrigatórios!</p>
+        <form method="POST">
+          {% csrf_token %}
+          <input type="hidden" name="id" id="id"/>
+          <div class="fields row pb-3">
+            <div class="field col-6">
+              <label for="nome_cargo">Nome</label>
+              <input
+                id="nome_cargo"
+                type="text"
+                name="nome_cargo"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="descricao_cargo">Descrição</label>
+              <input
+                id="descricao_cargo"
+                type="text"
+                name="descricao_cargo"
+                class="form-control"
+              />
+            </div>
+            <div class="field col-6">
+              <label for="salario_base_cargo">Salário Base</label>
+              <input
+                id="salario_base_cargo"
+                type="number"
+                step=".01"
+                name="salario_base_cargo"
+                class="form-control"
+                required
+              />
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <a
+          href="javascript:abrirModal('#modal-funcionario')"
+          class="btn btn-secondary"
+          >Cancelar</a
+        >
+        <button
+          type="button"
+          onclick="salvarCargo()"
+          class="btn btn-success"
+        >
+          Salvar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const cargoSelect = document.querySelector("#cargo_id");
+  cargoSelect.addEventListener("change", (e) => {
+    if (e.target.value == "new") {
+      abrirModal("#modal-cargo");
+    }
+  });
+</script>

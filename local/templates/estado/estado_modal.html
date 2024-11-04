@@ -1,0 +1,188 @@
+<script>
+  async function salvarEstado() {
+    const form = document.querySelector("#modal-estado form");
+    const formData = new FormData(form);
+    const response = await fetch('{% url "local:estado-list" %}', {
+      method: "POST",
+      body: formData,
+    });
+    if (response.status === 400) {
+      const responseMessage = await response.text();
+      alert(responseMessage);
+      return;
+    }
+    window.location.reload();
+  }
+
+  async function editarEstado(estadoID) {
+    const response = await fetch(
+    `{% url "local:estado-manage" 0 %}`.replace("0", estadoID)
+    );
+
+    if (!response.ok) {
+      alert("Erro ao editar Estado");
+      return;
+    }
+
+    const form = document.querySelector("#modal-estado form");
+    const estadoContent = await response.json();
+    $("#modal-estado").modal("show");
+
+    for (const key in estadoContent) {
+      let input = form.querySelector(`#${key}`);
+      if (!input)
+        input = form.querySelector(`[name=${key}_estado]`);
+      if (!input) {
+        console.log(`Campo ${key} não encontrado`);
+        continue;
+      }
+      if (input.type == "checkbox") {
+        input.checked = clienteContent[key] != 'False';
+        return;
+      }
+      input.value = estadoContent[key];
+    };
+  }
+
+  async function salvarPais() {
+    const form = document.querySelector("#modal-pais form");
+    const formData = new FormData(form);
+    const response = await fetch('{% url "local:pais-list" %}', {
+      method: "POST",
+      body: formData,
+    });
+    if (response.status === 400) {
+      const responseMessage = await response.text();
+      alert(responseMessage);
+      return;
+    }
+    const responseData = await response.json();
+    const paisSelect = document.querySelector("#pais_id");
+    const paisOption = document.createElement("option");
+    paisOption.textContent = responseData["nome_pais"];
+    paisOption.value = responseData.id;
+    paisSelect.appendChild(paisOption);
+    paisSelect.value = responseData.id;
+    abrirModal("#modal-estado");
+  }
+</script>
+
+<div class="modal fade" id="modal-estado" tabindex="2" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Cadastrar novo Estado</h3>
+      </div>
+      <div class="modal-body">
+        <p class="lead">Preencha todos os campos obrigatórios!</p>
+        <form method="POST">
+          {% csrf_token %}
+          <input type="hidden" id="id" name="id" />
+          <div class="fields row pb-3">
+            <div class="field col-6">
+              <label for="nome_estado">Nome</label>
+              <input
+                id="nome_estado"
+                type="text"
+                name="nome_estado"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="sigla_estado">UF</label>
+              <input
+                id="sigla_estado"
+                type="text"
+                name="sigla_estado"
+                class="form-control"
+              />
+            </div>
+            <div class="field col-6">
+              <label for="pais_id">País</label>
+              <select id="pais_id" name="pais_id" class="form-select" required>
+                <option value="">Selecione o país</option>
+                <option value="new">Novo País</option>
+                {% for pais in paises %}
+                <option value="{{ pais.id }}">{{ pais.nome_pais }}</option>
+                {% endfor %}        
+              </select>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <a
+          href="javascript:fecharModal('#modal-estado')"
+          class="btn btn-secondary"
+          >Cancelar</a
+        >
+        <button
+          type="button"
+          onclick="salvarEstado()"
+          class="btn btn-success"
+        >
+          Salvar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modal-pais" tabindex="2" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Cadastrar novo País</h3>
+      </div>
+      <div class="modal-body">
+        <p class="lead">Preencha todos os campos obrigatórios!</p>
+        <form method="POST">
+          {% csrf_token %}
+          <div class="fields row pb-3">
+            <div class="field col-6">
+              <label for="nome_pais">Nome</label>
+              <input
+                id="nome_pais"
+                type="text"
+                name="nome_pais"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="sigla_pais">Sigla</label>
+              <input
+                id="sigla_pais"
+                type="text"
+                name="sigla_pais"
+                class="form-control"
+              />
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <a
+          href="javascript:abrirModal('#modal-estado')"
+          class="btn btn-secondary"
+          >Cancelar</a
+        >
+        <button
+          type="button"
+          onclick="salvarPais()"
+          class="btn btn-success"
+        >
+          Salvar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const paisSelect = document.querySelector("#pais_id");
+  paisSelect.addEventListener("change", e => {
+    if (e.target.value == "new") abrirModal("#modal-pais");
+  });
+</script>

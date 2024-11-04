@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% load static format_date %}
+
+{% block page_title %} Cidades {% endblock page_title%}
+
+{% block content %}
+<h1>Lista de Cidades</h1>
+
+{% if cidades %}
+<table class="table table-hover">
+  <thead>
+    <tr class="table-light">
+      <th scope="col">#</th>
+      <th scope="col">Cidade</th>
+      <th scope="col">DDD</th>
+      <th scope="col">Estado</th>
+      <th scope="col">Data de Cadastro</th>
+      <th scope="col">Última alteração</th>
+      <th scope="col">Ações</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for cidade in cidades %}
+    <tr>
+      <th scope="row">{{cidade.id}}</th>
+      <td>{{cidade.nome_cidade}}</td>
+      <td>{{cidade.ddd_cidade | default:"-"}}</td>
+      <td>{{cidade.estado}}</td>
+      <td>{{cidade.data_cadastro|format_date}}</td>
+      <td>{{cidade.data_ultima_alteracao|format_date}}</td>
+      <td>
+        <a href="javascript:editarCidade('{{cidade.id}}')" class="btn btn-sm btn-warning"
+          >Editar</a
+        >
+        <a
+          href="javascript:deleteCidade('{{cidade.id}}')"
+          class="btn btn-sm btn-danger"
+          >Excluir</a
+        >
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>Sem dados cadastrados</p>
+{% endif %}
+<a href="javascript:abrirModal('#modal-cidade')" class="btn btn-primary"
+  >Novo cadastro</a
+>
+
+{% include 'cidade/cidade_modal.html' %}
+
+<script>
+  const deleteCidade = (cidadeID) => {
+    if (!confirm("Deseja realmente excluir esta cidade?")) return;
+
+    fetch(`${cidadeID}/`, {
+      method: "DELETE",
+    }).then((response) => {
+      if (response.ok) {
+        window.location.reload();
+        return;
+      }
+      if (response.status === 400) {
+        const responsePromise = response.text();
+        responsePromise.then((responseData) => {
+          alert(responseData);
+        });
+      }
+    });
+  };
+</script>
+{% endblock content %}

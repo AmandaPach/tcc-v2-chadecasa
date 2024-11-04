@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% load static format_date status %}
+
+{% block page_title %}
+    Forma Pagamento
+{% endblock page_title %}
+
+{% block content %}
+<h1>Lista de Formas de Pagamento</h1>
+
+    {% if pagamentos %}
+        <table class="table table-hover">
+            <thead>
+                <tr class="table-light">
+                    <th scope="col">#</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Nome</th>
+                    <th scope="col">Descrição</th>
+                    <th scope="col">Data de Cadastro</th>
+                    <th scope="col">Última alteração</th>
+                    <th scope="col">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pagamento in pagamentos %}
+                    <tr>
+                        <td scope="row">{{pagamento.id}}</td>
+                        <td>{% status is_active=pagamento.status %}</td>
+                        <td>{{pagamento.nome_pagamento}}</td>
+                        <td>{{pagamento.descricao_pagamento}}</td>
+                        <td>{{pagamento.data_cadastro|format_date}}</td>
+                        <td>{{pagamento.data_ultima_alteracao|format_date}}</td>
+                        <td>
+                            <a href="javascript:editarPagamento('{{pagamento.id}}')" class="btn btn-sm btn-warning">Editar</a>
+                            <a href="javascript:deletePagamento('{{pagamento.id}}')" class="btn btn-sm btn-danger">Excluir</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p> Sem dados cadastrados </p>
+    {% endif %}
+    <a href="javascript:abrirModal('#modal-pagamento')" class="btn btn-primary">Novo cadastro</a> 
+    
+    {% include "pagamento/formaPagamento_modal.html" %}
+
+    <script>
+        const deletePagamento = pagamentoID => {
+            if (!confirm('Deseja realmente excluir esta forma de pagamento?'))
+                return;
+
+            fetch(`${pagamentoID}/`, {
+                method: 'DELETE',
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                }
+            })
+        }
+    </script>
+{% endblock content %}

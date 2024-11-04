@@ -1,0 +1,176 @@
+<script>
+  async function salvarCompras() {
+    const form = document.querySelector("#modal-compras form");
+    const formData = new FormData(form);
+    const response = await fetch("{% url 'compras:list' %}", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (response.ok) {
+      window.location.reload();
+      return;
+    }
+
+    if (response.status == 400) {
+      const responseText = await response.text();
+      alert(responseText);
+    }
+  }
+</script>
+
+<style>
+  input[readonly] {
+    background-color: #f8f9fa;
+    cursor: default;
+  }
+</style>
+
+<div class="modal fade" id="modal-compras" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Cadastrar nova compra</h3>
+      </div>
+      <div class="modal-body">
+        <form method="POST">
+          {% csrf_token %}
+          <input type="hidden" name="valor_total" value="0" id="valor_total" />
+          <div class="fields row pb-3">
+            <div class="field col-4">
+              <label>Nota Fiscal</label>
+              <input
+                type="number"
+                min="0"
+                name="nota_fiscal"
+                id="nota_fiscal"
+                class="form-control"
+                required
+                onchange="verifyNotaFiscal()"
+              />
+            </div>
+            <div class="field col-4">
+              <label>Modelo da Nota</label>
+              <input
+                type="number"
+                min="0"
+                value="55"
+                name="modelo_nota"
+                id="modelo_nota"
+                class="form-control"
+                required
+                onchange="verifyNotaFiscal()"
+              />
+            </div>
+            <div class="field col-4">
+              <label>Série da Compra</label>
+              <input
+                type="number"
+                min="0"
+                name="serie"
+                value="1"
+                id="serie"
+                class="form-control"
+                required
+                onchange="verifyNotaFiscal()"
+              />
+            </div>
+            <div class="field col-12 mb-3">
+              <label>Fornecedor</label>
+              <select
+                name="fornecedor_id"
+                id="fornecedor_id"
+                onchange="verifyFornecedor(this); verifyNotaFiscal();"
+                required
+                class="form-select"
+              >
+                <option value="">Selecione um fornecedor</option>
+                {% for fornecedor in fornecedores %}
+                  <option value="{{ fornecedor.id }}">
+                    {{ fornecedor.id }} - {{ fornecedor.nome_fantasia_fornecedor }}
+                  </option>
+                {% endfor %}
+                <option value="new">Novo Fornecedor</option>
+              </select>
+            </div>
+            <div class="field col-6">
+              <label>Data de Emissão</label>
+              <input
+                type="date"
+                required
+                onchange="verifyDates()"
+                name="data_emissao"
+                id="data_emissao"
+                class="form-control"
+              />
+            </div>
+            <div class="field col-6">
+              <label>Data de Chegada</label>
+              <input
+                type="date"
+                onchange="verifyDates()"
+                required
+                name="data_chegada"
+                id="data_chegada"
+                class="form-control"
+              />
+            </div>
+          </div>
+
+          <h4>Itens da Compra</h4>
+          <div id="formset-items-produtos">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Produto</th>
+                  <th>Quantidade</th>
+                  <th>Custo</th>
+                  <th>Desconto</th>
+                  <th>Total</th>
+                  <th>Remover</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <div
+            class="mb-3 px-2 d-flex justify-content-between align-items-center"
+          >
+            <button type="button" class="btn btn-primary" id="add-item" onclick="addProdutoInput()">
+              Adicionar Produto
+            </button>
+            <h5 class="m-0">Total: <span id="total">0.00</span></h5>
+          </div>
+
+          <hr>
+
+          <h4>Pagamento</h4>
+          <div class="row pb-3">
+            <div class="field col-12">
+              <label for="condicao_id">Condição de Pagamento</label>
+              <select id="condicao_id" name="condicao_id" class="form-select">
+                <option value="">Selecione uma condição de pagamento</option>
+                {% for condicao in condicoes %}
+                  <option value="{{ condicao.id }}">{{ condicao.nome_condicao_pgto }}</option>
+                {% endfor %}
+                <option value="new">Nova Condição de Pagamento</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <a
+              href="javascript:fecharModal('#modal-compras')"
+              class="btn btn-secondary"
+              >Cancelar</a
+            >
+            <button onclick="salvarCompras()" type="button" class="btn btn-success">
+              Salvar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

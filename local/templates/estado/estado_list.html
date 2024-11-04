@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% load static format_date %}
+
+{% block page_title %}Estados{% endblock page_title %}
+
+{% block content %}
+<h1>Lista de Estados</h1>
+
+{% if estados %}
+<table class="table table-hover">
+  <thead>
+    <tr class="table-light">
+      <th scope="col">#</th>
+      <th scope="col">Estado</th>
+      <th scope="col">UF</th>
+      <th scope="col">País</th>
+      <th scope="col">Data de Cadastro</th>
+      <th scope="col">Última alteração</th>
+      <th scope="col">Ações</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for estado in estados %}
+    <tr>
+      <th scope="row">{{estado.id}}</th>
+      <td>{{estado.nome_estado}}</td>
+      <td>{{estado.sigla_estado | default:"-"}}</td>
+      <td>{{estado.pais}}</td>
+      <td>{{estado.data_cadastro|format_date}}</td>
+      <td>{{estado.data_ultima_alteracao|format_date}}</td>
+      <td>
+        <a href="javascript:editarEstado('{{estado.id}}')" class="btn btn-sm btn-warning"
+          >Editar</a
+        >
+        <a
+          href="javascript:deleteEstado('{{estado.id}}')"
+          class="btn btn-sm btn-danger"
+          >Excluir</a
+        >
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>Sem dados cadastrados</p>
+{% endif %}
+
+<a href="javascript:abrirModal('#modal-estado')" class="btn btn-primary"
+  >Novo cadastro</a
+>
+
+{% include 'estado/estado_modal.html' %}
+
+<script>
+  const deleteEstado = (estadoID) => {
+    if (!confirm("Deseja realmente excluir este estado?")) return;
+
+    fetch(`${estadoID}/`, {
+      method: "DELETE",
+    }).then((response) => {
+      const responsePromise = response.text();
+      responsePromise.then((responseData) => {
+        if (response.status === 400) {
+          alert(responseData);
+          return;
+        }
+        if (response.ok) {
+          window.location.reload();
+        }
+      });
+    });
+  };
+</script>
+{% endblock content %}

@@ -1,0 +1,78 @@
+<script>
+    async function salvarPagamento() {
+        const form = document.querySelector('#modal-pagamento form');
+        const formData = new FormData(form);
+        const response = await fetch('{% url "pagamento:list" %}', {
+            method: 'POST',
+            body: formData
+        });
+        if (!response.ok) {
+            alert('Erro ao salvar a forma de pagamento');
+            return;
+        };
+        window.location.reload();
+    }
+
+    async function editarPagamento(pagamentoID) {
+        const response = await fetch(
+            `{% url "pagamento:manage" 0 %}`.replace('0', pagamentoID)
+        );
+        if (!response.ok) {
+            alert('Erro ao buscar forma de pagamento');
+            return;
+        }
+        const pagamentoContent = await response.json();
+        $('#modal-pagamento').modal('show');
+        const form = document.querySelector('#modal-pagamento form');
+        for (const key in pagamentoContent) {
+            let input = form.querySelector(`#${key}`);
+            if (!input) {
+                input = form.querySelector(`[name=${key}_pagamento]`);
+            }
+            if (!input) {
+                console.log(`Campo ${key} não encontrado`);
+                continue;
+            }
+            if (input.type == "checkbox") {
+                input.checked = clienteContent[key] != 'False';
+                return;
+            }
+            input.value = pagamentoContent[key];
+        }
+    }
+</script>
+
+<div class="modal fade" id="modal-pagamento" tabindex="2" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Cadastrar nova forma de pagamento</h3>
+            </div>
+            <div class="modal-body">
+                <p class="lead">Preencha todos os campos obrigatórios!</p>
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" id="id" name="id">
+                    <div class="fields row pb-3">
+                        <div class="field col-12 border rounded text-center py-2">
+                            <input type="checkbox" name="status" class="form-check-input" id="status" checked="true"/>
+                            <label class="form-check-label" for="status">Ativo</label>
+                        </div>
+                        <div class="field col-12">
+                            <label for="nome_pagamento">Nome</label>
+                            <input id="nome_pagamento" type="text" name="nome_pagamento" class="form-control" required>
+                        </div>
+                        <div class="field col-12">
+                            <label for="descricao_pagamento">Descrição</label>
+                            <input id="descricao_pagamento" type="text" name="descricao_pagamento" class="form-control">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <a href="javascript:fecharModal('#modal-pagamento')" class="btn btn-secondary">Cancelar</a>
+                <button type="button" onclick="salvarPagamento()" class="btn btn-success">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>

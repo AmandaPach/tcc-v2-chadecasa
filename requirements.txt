@@ -1,0 +1,5 @@
+django
+crispy_bootstrap5
+python-decouple
+dj_database_url
+django-cpf

@@ -1,0 +1,160 @@
+<script>
+  async function salvarProduto() {
+    const form = document.querySelector("#modal-produto form");
+    const formData = new FormData(form);
+    const response = await fetch('{% url "produtos:list" %}', {
+      method: "POST",
+      body: formData,
+    });
+    if (!response.ok) {
+      alert("Erro ao salvar produto");
+      return;
+    }
+    const responseData = await response.json();
+    const produtoSelectList = document.querySelectorAll("[name='produto_id']");
+    const optionElem = document.createElement("option");
+    optionElem.value = responseData.id;
+    optionElem.innerText = responseData["nome_produto"];
+    produtoSelectList.forEach((select) => select.appendChild(optionElem));
+    abrirModal("#modal-compras");
+  }
+</script>
+
+<div class="modal fade" id="modal-produto" tabindex="2" role="dialog">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Cadastrar novo produto</h3>
+      </div>
+      <div class="modal-body">
+        <p class="lead">Preencha todos os campos obrigatórios!</p>
+        <form method="POST">
+          {% csrf_token %}
+          <div class="fields row pb-3">
+            <div class="field col-6">
+              <label for="nome_produto">Nome do Produto</label>
+              <input
+                id="nome_produto"
+                type="text"
+                name="nome_produto"
+                class="form-control"
+              />
+            </div>
+            <div class="field col-6">
+              <label for="descricao_produto">Descrição</label>
+              <input
+                id="descricao_produto"
+                type="text"
+                name="descricao_produto"
+                class="form-control"
+              />
+            </div>
+            <div class="field col-6">
+              <label for="preco_custo_produto">Preço de custo</label>
+              <input
+                id="preco_custo_produto"
+                type="number"
+                min="0"
+                name="preco_custo_produto"
+                class="form-control"
+              />
+            </div>
+            <div class="field col-6">
+              <label for="preco_venda_produto">Preço de venda</label>
+              <input
+                id="preco_venda_produto"
+                type="number"
+                min="0"
+                name="preco_venda_produto"
+                class="form-control"
+              />
+            </div>
+            <div class="field col-6">
+              <label for="unid_medida_produto">Unidade de medida</label>
+              <select
+                class="form-select"
+                id="unid_medida_produto"
+                name="unid_medida_produto"
+              >
+                <option value="">Selecione uma unidade de medida</option>
+                <option value="UN">Unidade</option>
+                <option value="KG">Quilograma</option>
+                <option value="LT">Litro</option>
+              </select>
+            </div>
+            <div class="field col-6">
+              <label for="categoria_id">Categoria</label>
+              <select class="form-select" id="categoria_id" name="categoria_id">
+                <option value="">Selecione uma categoria</option>
+                {% for categoria in categorias %}
+                <option value="{{ categoria.id }}">
+                  {{ categoria.nome_categoria }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="field col-6">
+              <label for="tipo_id">Tipo</label>
+              <select class="form-select" id="tipo_id" name="tipo_id">
+                <option value="">Selecione um tipo</option>
+                {% for tipo in tipos %}
+                <option value="{{ tipo.id }}">{{ tipo.nome_tipo }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <a
+              href="javascript:abrirModal('#modal-compras')"
+              class="btn btn-secondary"
+              >Cancelar</a
+            >
+            <button
+              type="button"
+              onclick="salvarProduto()"
+              class="btn btn-success"
+            >
+              Salvar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/html" id="empty-form-produto">
+  <tr>
+    <td>
+      <select
+        class="form-select"
+        name="produto_id"
+        onchange="verifyProduto(this)"
+      >
+        <option value="">Selecione um produto</option>
+        {% for produto in produtos %}
+          <option value="{{ produto.id }}">{{produto.id}} - {{ produto.nome_produto }}</option>
+        {% endfor %}
+        <option value="new">Novo Produto</option>
+      </select>
+    </td>
+    <td>
+      <input onchange="updateTotalValue()" type="number" class="form-control" value="1" name="quantidade"/>
+    </td>
+    <td>
+      <input onchange="updateTotalValue()" type="number" class="form-control" step=".01" name="custo" value="0"/>
+    </td>
+    <td>
+      <input onchange="updateTotalValue()" type="number" class="form-control" step=".01" name="desconto" value="0"/>
+    </td>
+    <td>
+      <input type="number" readonly class="form-control" name="unidadeCusto" value="0"/>
+    </td>
+    <td align="center">
+      <button type="button" class="btn btn-danger" onclick="removeItem(this);">
+        <b>X</b>
+      </button>
+    </td>
+  </tr>
+</script>
+

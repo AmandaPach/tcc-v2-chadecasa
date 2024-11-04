@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% load static format_date status %}
+
+{% block page_title %}
+    Condição Pagamento
+{% endblock page_title %}
+
+{% block content %}
+<h1>Lista de Condições Pagamento</h1>
+
+    {% if condicoes %}
+        <table class="table table-hover">
+            <thead>
+                <tr class="table-light">
+                    <th scope="col">#</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Condição</th>
+                    <th scope="col">Data de Cadastro</th>
+                    <th scope="col">Última alteração</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Ações</th>
+                    <th scope="col"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for condicao in condicoes %}
+                    <tr>
+                        <td scope="row">{{condicao.id}}</td>
+                        <td>{% status is_active=condicao.status %}</td>
+                        <td>{{condicao.nome_condicao_pgto}}</td>
+                        <td>{{condicao.data_cadastro|format_date}}</td>
+                        <td>{{condicao.data_ultima_alteracao|format_date}}</td>
+                        <td>{{condicao.status}}</td>
+                        <td>
+                            <a href="javascript:editarCondicao('{{condicao.id}}')" class="btn btn-sm btn-warning">Editar</a>
+                            <a href="javascript:deleteCondicao('{{condicao.id}}')" class="btn btn-sm btn-danger">Excluir</a>
+                        </td>
+                        <td>
+                            <a href="javascript:abrirModalParcelas('{{condicao.id}}')" class="btn btn-sm btn-primary">Ver Parcelas</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p> Sem dados cadastrados </p>
+    {% endif %}
+    <a href="javascript:abrirModal('#modal-condicao')" class="btn btn-primary">Novo cadastro</a> 
+    
+    {% include 'pagamento/condicaoPagamento_modal.html' %}
+    {% include 'pagamento/condicaoPagamento_parcelas_modal.html' %}
+    {% include 'pagamento/modal_forma_pagamento.html' %}
+
+    <script>
+        const deleteCondicao = condicaoID => {
+            if (!confirm('Deseja realmente excluir esta condição de pagamento?'))
+                return;
+        
+            fetch(`${condicaoID}/`, {
+                method: 'DELETE',
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                }
+            })
+        }
+    </script>
+{% endblock content %}

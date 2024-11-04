@@ -1,0 +1,231 @@
+<script>
+  async function salvarCondicao() {
+    const formCondicao = document.querySelector("#modal-condicao form");
+    const formData = new FormData(formCondicao);
+    const response = await fetch('{% url "pagamento:condicao-list" %}', {
+      method: "POST",
+      body: formData,
+    });
+    if ((await response.status) === 400) {
+      const responseMessage = await response.text();
+      alert(responseMessage);
+      return;
+    }
+    const responseData = await response.json();
+    const condicaoSelect = document.querySelector("#condicao_id");
+    const newCondicaoOption = document.createElement("option");
+    newCondicaoOption.textContent = responseData["nome_condicao_pgto"];
+    newCondicaoOption.value = responseData.id;
+    condicaoSelect.appendChild(newCondicaoOption);
+    condicaoSelect.value = responseData.id;
+    abrirModal("#modal-compras");
+  }
+</script>
+
+<div class="modal fade" id="modal-condicao" tabindex="2" role="dialog">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Cadastrar nova condição de pagamento</h3>
+      </div>
+      <div class="modal-body">
+        <p class="lead">Preencha todos os campos obrigatórios!</p>
+        <form method="POST">
+          {% csrf_token %}
+          <div class="fields row pb-3">
+            <div class="field col-12">
+              <label for="nome_condicao_pgto">Nome</label>
+              <input
+                id="nome_condicao_pgto"
+                type="text"
+                name="nome_condicao_pgto"
+                required
+                class="form-control"
+              />
+            </div>
+          </div>
+
+          <h4>Parcelas</h4>
+          <div id="formset-items-parcelas">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Parcela</th>
+                  <th>Percentual</th>
+                  <th>Dias</th>
+                  <th>Taxa</th>
+                  <th>Multa</th>
+                  <th>Desconto</th>
+                  <th>Forma de Pagamento</th>
+                  <th align="center">Remover</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div id="percentual__alert" class="text-danger text-bold mb-3">
+            A soma dos valores percentuais deve ser 100%
+          </div>
+          <button
+            type="button"
+            class="btn btn-primary"
+            id="add-item"
+            onclick="addParcelaInput()"
+          >
+            Adicionar Parcela
+          </button>
+        </form>
+      </div>
+      <div class="modal-footer mt-3">
+        <button
+          type="button"
+          onclick="abrirModal('#modal-compras')"
+          class="btn btn-secondary"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          onclick="salvarCondicao()"
+          class="btn btn-success"
+        >
+          Salvar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/html" id="empty-form-parcela">
+  <tr>
+    <td>
+      <input
+        type="number"
+        name="parcela"
+        min="1"
+        class="form-control"
+        required
+      />
+    </td>
+    <td>
+      <input
+        type="number"
+        name="percentual"
+        min="1"
+        data-type="percent"
+        step=".1"
+        class="form-control"
+        value="0"
+        required
+      />
+    </td>
+    <td>
+      <input
+        type="number"
+        name="dias"
+        value="0"
+        min="0"
+        class="form-control"
+        required
+      />
+    </td>
+    <td>
+      <input
+        type="number"
+        name="taxa"
+        min="0"
+        value="0"
+        data-type="percent"
+        class="form-control"
+        required
+      />
+    </td>
+    <td>
+      <input
+        type="number"
+        name="multa"
+        min="0"
+        data-type="percent"
+        value="0"
+        class="form-control"
+        required
+      />
+    </td>
+    <td>
+      <input
+        type="number"
+        name="desconto"
+        min="0"
+        data-type="percent"
+        value="0"
+        class="form-control"
+        required
+      />
+    </td>
+    <td>
+      <select name="forma_pagamento" class="form-control" required>
+        <option value="">Selecione a forma de pagamento</option>
+        {% for forma_pagamento in forma_pagamentos %}
+        <option value="{{ forma_pagamento.id }}">
+          {{ forma_pagamento.id }} - {{ forma_pagamento.nome_forma_pagamento }}
+        </option>
+        {% endfor %}
+        <option value="new">Nova forma de pagamento</option>
+      </select>
+    </td>
+    <td align="center">
+      <button type="button" class="btn btn-danger" onclick="removerLinha(this)">
+        X
+      </button>
+    </td>
+  </tr>
+</script>
+
+<script>
+  const condicaoSelect = document.querySelector("#condicao_id");
+  condicaoSelect.addEventListener("change", () => {
+    if (condicaoSelect.value === "new") {
+      abrirModal("#modal-condicao");
+    }
+  });
+
+  const verifyPercent = () => {
+    const percentualInputs = document.querySelectorAll(
+      "input[name='percentual']"
+    );
+    const percentualAlert = document.querySelector("#percentual__alert");
+    let total = 0;
+
+    percentualInputs.forEach((input) => {
+      total += parseFloat(input.value);
+    });
+
+    percentualAlert.style.display = total === 100 ? "none" : "block";
+  };
+
+  const removerLinha = (button) => {
+    const row = button.closest("tr");
+    row.remove();
+  };
+
+  const addParcelaInput = () => {
+    const formParcelaIdx = document.querySelectorAll(
+      "#formset-items-parcelas tbody tr"
+    ).length;
+    const newForm = document.querySelector("#empty-form-parcela").innerHTML;
+    document
+      .querySelector("#formset-items-parcelas tbody")
+      .insertAdjacentHTML("beforeend", newForm);
+
+    const lastRow = document.querySelector(
+      "#formset-items-parcelas tbody tr:last-child"
+    );
+    lastRow.querySelector("input[name$='parcela']").value = formParcelaIdx + 1;
+    lastRow
+      .querySelector("input[name$='percentual']")
+      .addEventListener("change", verifyPercent);
+    setFields();
+  };
+
+  addParcelaInput();
+</script>

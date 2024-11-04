@@ -1,0 +1,250 @@
+<script>
+  async function salvarFornecedor() {
+    const form = document.querySelector("#modal-fornecedor form");
+    const formData = new FormData(form);
+    const response = await fetch('{% url "fornecedor:list" %}', {
+      method: "POST",
+      body: formData,
+    });
+    if (!response.ok) {
+      const responseText = await response.text();
+      alert(responseText);
+      return;
+    }
+    window.location.reload();
+  }
+
+  async function editarFornecedor(fornecedorID) {
+    const response = await fetch(
+      `{% url "fornecedor:manage" 0 %}`.replace("0", fornecedorID)
+    );
+    if (!response.ok) {
+      alert("Erro ao buscar fornecedor");
+      return;
+    }
+
+    const fornecedorResponse = response.json();
+    fornecedorResponse.then(fornecedorContent => {
+      const fornecedorID = fornecedorContent.id;
+      $("#modal-fornecedor").modal("show");
+
+      const form = document.querySelector("#modal-fornecedor form");
+      for (const key in fornecedorContent) {
+        if (key === "cidade") {
+          const cidadeSelect = form.querySelector("#cidade_id");
+          const newOption = document.createElement("option");
+          newOption.value = fornecedorContent.cidade_id;
+          newOption.textContent = fornecedorContent[key];
+          cidadeSelect.appendChild(newOption);
+          cidadeSelect.value = fornecedorContent.cidade_id;
+          continue;
+        }
+        let input = form.querySelector(`#${key}`);
+        if (!input) {
+          input = form.querySelector(`[name=${key}_fornecedor]`);
+        }
+        if (!input) {
+          console.log(`Campo ${key} não encontrado`);
+          continue;
+        }
+        if (input.type == "checkbox") {
+          input.checked = clienteContent[key] != 'False';
+          return;
+        }
+        input.value = fornecedorContent[key];
+      }
+    })
+  }
+</script>
+
+<div class="modal fade" id="modal-fornecedor" tabindex="2" role="dialog">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Cadastrar novo fornecedor</h3>
+      </div>
+      <div class="modal-body">
+        <p class="lead">Preencha todos os campos obrigatórios!</p>
+        <form method="POST">
+          <input type="hidden" name="id" id="id" />
+          {% csrf_token %}
+          <div class="fields row pb-3">
+            <div class="field col-12 border rounded text-center py-2">
+              <input type="checkbox" name="status" class="form-check-input" id="status" checked="true"/>
+              <label class="form-check-label" for="status">Ativo</label>
+            </div>
+            <div class="field col-6">
+              <label for="razao_social_fornecedor">Razão Social</label>
+              <input
+                id="razao_social_fornecedor"
+                type="text"
+                name="razao_social_fornecedor"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="nome_fantasia_fornecedor">Nome Fantasia</label>
+              <input
+                id="nome_fantasia_fornecedor"
+                type="text"
+                name="nome_fantasia_fornecedor"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="cnpj_fornecedor">CNPJ</label>
+              <input
+                id="cnpj_fornecedor"
+                type="text"
+                name="cnpj_fornecedor"
+                data-type="cnpj"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="ie_fornecedor">IE</label>
+              <input
+                min="0"
+                minlength="8"
+                maxlength="12"
+                id="ie_fornecedor"
+                type="number"
+                name="ie_fornecedor"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="email_fornecedor">Email</label>
+              <input
+                id="email_fornecedor"
+                type="email"
+                name="email_fornecedor"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="data_fundacao_fornecedor">Data da fundação</label>
+              <input
+                id="data_fundacao_fornecedor"
+                type="date"
+                data-type="pastdate"
+                name="data_fundacao_fornecedor"
+                class="form-control"
+              />
+            </div>
+            <div class="field col-6">
+              <label for="telefone_fornecedor">Telefone</label>
+              <input
+                id="telefone_fornecedor"
+                type="text"
+                data-type="phone"
+                name="telefone_fornecedor"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="limite_credito_fornecedor">Limite de crédito</label>
+              <input
+                id="limite_credito_fornecedor"
+                type="number"
+                min="0"
+                step=".01"
+                name="limite_credito_fornecedor"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-12">
+              <label for="rua_fornecedor">Rua</label>
+              <input
+                id="rua_fornecedor"
+                type="text"
+                name="rua_fornecedor"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="bairro_fornecedor">Bairro</label>
+              <input
+                id="bairro_fornecedor"
+                type="text"
+                name="bairro_fornecedor"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="complemento_fornecedor">Complemento</label>
+              <input
+                id="complemento_fornecedor"
+                type="text"
+                name="complemento_fornecedor"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="cep_fornecedor">CEP</label>
+              <input
+                id="cep_fornecedor"
+                data-type="cep"
+                type="text"
+                name="cep_fornecedor"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="numero_rua_fornecedor">Número</label>
+              <input
+                id="numero_rua_fornecedor"
+                type="text"
+                name="numero_rua_fornecedor"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="estado_id">Estado</label>
+              <select id="estado_id" name="estado_id" class="form-select" required>
+                <option value="">Selecione um estado</option>
+                {% for estado in estados %}
+                <option value="{{ estado.id }}">
+                  {{ estado.nome_estado }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="field col-6">
+              <label for="cidade_id">Cidade</label>
+              <select id="cidade_id" name="cidade_id" class="form-select" required>
+                <option value="">Selecione um estado primeiro</option>
+              </select>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <a
+          href="javascript:fecharModal('#modal-fornecedor')"
+          class="btn btn-secondary"
+          >Cancelar</a
+        >
+        <button
+          type="button"
+          onclick="salvarFornecedor()"
+          class="btn btn-success"
+        >
+          Salvar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

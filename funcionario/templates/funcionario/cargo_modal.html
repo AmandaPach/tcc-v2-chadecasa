@@ -1,0 +1,111 @@
+<script>
+  async function salvarCargo() {
+    const form = document.querySelector("#modal-cargo form");
+    const formData = new FormData(form);
+    const response = await fetch('{% url "funcionario:cargo-list" %}', {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const responseText = await response.text();
+      alert(responseText);
+      return;
+    }
+
+    fecharModal("#modal-cargo");
+    window.location.reload();
+  }
+
+  async function editarCargo(cargoID) {
+    const response = await fetch(
+      `{% url "funcionario:cargo-manage" 0 %}`.replace("0", cargoID)
+    );
+
+    if (!response.ok) {
+      alert("Erro ao buscar cargo");
+      return;
+    }
+
+    const cargoResponse = await response.json();
+    $("#modal-cargo").modal("show");
+
+    const form = document.querySelector("#modal-cargo form");
+    for (const key in cargoResponse) {
+      let input = form.querySelector(`#${key}`);
+      if (!input) {
+        input = form.querySelector(`[name=${key}_cargo]`);
+      }
+      if (!input) {
+        console.log(`Campo ${key} não encontrado`);
+        continue;
+      }
+      input.value = cargoResponse[key];
+    };
+  }
+</script>
+
+<div class="modal fade" id="modal-cargo" tabindex="2" role="dialog">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Cadastrar novo cargo</h3>
+      </div>
+      <div class="modal-body">
+        <p class="lead">Preencha todos os campos obrigatórios!</p>
+        <form method="POST">
+          {% csrf_token %}
+          <input type="hidden" name="id" id="id">
+          <div class="fields row pb-3">
+            <div class="field col-6">
+              <label for="nome_cargo">Nome</label>
+              <input
+                id="nome_cargo"
+                maxlength="40"
+                type="text"
+                name="nome_cargo"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="descricao_cargo">Descrição</label>
+              <input
+                id="descricao_cargo"
+                type="text"
+                name="descricao_cargo"
+                class="form-control"
+              />
+            </div>
+            <div class="field col-6">
+              <label for="salario_base_cargo">Salário Base</label>
+              <input
+                id="salario_base_cargo"
+                min="0"
+                type="number"
+                step=".01"
+                name="salario_base_cargo"
+                class="form-control"
+                required
+              />
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <a
+          href="javascript:fecharModal('#modal-cargo')"
+          class="btn btn-secondary"
+          >Cancelar</a
+        >
+        <button
+          type="button"
+          onclick="salvarCargo()"
+          class="btn btn-success"
+        >
+          Salvar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

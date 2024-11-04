@@ -1,0 +1,290 @@
+<script>
+  async function salvarCidade() {
+    const form = document.querySelector("#modal-cidade form");
+    const formData = new FormData(form);
+    const response = await fetch('{% url "local:cidade-list" %}', {
+      method: "POST",
+      body: formData,
+    });
+    if (response.status === 400) {
+      const responseMessage = await response.text();
+      alert(responseMessage);
+      return;
+    }
+    window.location.reload();
+  }
+
+  async function editarCidade(cidadeID) {
+    const response = await fetch(
+      `{% url "local:cidade-manage" 0 %}`.replace("0", cidadeID)
+    );
+
+    if (!response.ok) {
+      alert("Erro ao buscar Cidade");
+      return;
+    }
+
+    const cidadeResponse = response.json();
+    cidadeResponse.then(cidadeContent => {
+      $("#modal-cidade").modal("show");
+
+      const form = document.querySelector("#modal-cidade form");
+      for (const key in cidadeContent) {
+        let input = form.querySelector(`#${key}`);
+        if (!input) {
+          input = form.querySelector(`[name=${key}_cidade]`);
+        }
+        if (!input) {
+          console.log(`Campo ${key} não encontrado`);
+          continue;
+        }
+        if (input.type == "checkbox") {
+          input.checked = clienteContent[key] != 'False';
+          return;
+        }
+        input.value = cidadeContent[key];
+      }
+    });
+  }
+
+  async function salvarEstado() {
+    const form = document.querySelector("#modal-estado form");
+    const formData = new FormData(form);
+    const response = await fetch('{% url "local:estado-list" %}', {
+      method: "POST",
+      body: formData,
+    });
+    if (response.status === 400) {
+      const responseMessage = await response.text();
+      alert(responseMessage);
+      return;
+    }
+    const paisSelect = document.querySelector("#estado_id");
+    const paisOption = document.createElement("option");
+    const responseData = await response.json();
+    paisOption.textContent = responseData["nome_estado"];
+    paisOption.value = responseData.id;
+    paisSelect.appendChild(paisOption);
+    paisSelect.value = responseData.id;
+    abrirModal("#modal-cidade");
+  }
+
+  async function salvarPais() {
+    const form = document.querySelector("#modal-pais form");
+    const formData = new FormData(form);
+    const response = await fetch('{% url "local:pais-list" %}', {
+      method: "POST",
+      body: formData,
+    });
+    if (response.status === 400) {
+      const responseMessage = await response.text();
+      alert(responseMessage);
+      return;
+    }
+    const responseData = await response.json();
+    const paisSelect = document.querySelector("#pais_id");
+    const paisOption = document.createElement("option");
+    paisOption.textContent = responseData["nome_pais"];
+    paisOption.value = responseData.id;
+    paisSelect.appendChild(paisOption);
+    paisSelect.value = responseData.id;
+    abrirModal("#modal-estado");
+  }
+</script>
+
+<div class="modal fade" id="modal-cidade" tabindex="2" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Cadastrar nova Cidade</h3>
+      </div>
+      <div class="modal-body">
+        <p class="lead">Preencha todos os campos obrigatórios!</p>
+        <form method="POST">
+          {% csrf_token %}
+          <input type="hidden" name="id" id="id">
+          <div class="fields row pb-3">
+            <div class="field col-6">
+              <label for="nome_cidade">Nome</label>
+              <input
+                id="nome_cidade"
+                type="text"
+                name="nome_cidade"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="ddd_cidade">DDD da cidade</label>
+              <input
+                id="ddd_cidade"
+                type="number"
+                maxlength="2"
+                min="1"
+                name="ddd_cidade"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="estado_id">Estado</label>
+              <select id="estado_id" name="estado_id" class="form-control" required>
+                <option value="">Selecione o estado</option>
+                {% for estado in estados %}
+                <option value="{{ estado.id }}">
+                  {{ estado.nome_estado }}
+                </option>
+                {% endfor %}
+                <option value="new">Novo estado</option>
+              </select>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <a
+          href="javascript:fecharModal('#modal-cidade')"
+          class="btn btn-secondary"
+          >Cancelar</a
+        >
+        <button
+          type="button"
+          onclick="salvarCidade()"
+          class="btn btn-success"
+        >
+          Salvar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modal-estado" tabindex="2" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Cadastrar novo Estado</h3>
+      </div>
+      <div class="modal-body">
+        <p class="lead">Preencha todos os campos obrigatórios!</p>
+        <form method="POST">
+          {% csrf_token %}
+          <input name="id" id="id" type="hidden"/>
+          <div class="fields row pb-3">
+            <div class="field col-6">
+              <label for="nome_estado">Nome</label>
+              <input
+                id="nome_estado"
+                type="text"
+                name="nome_estado"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="sigla_estado">Sigla</label>
+              <input
+                id="sigla_estado"
+                type="text"
+                name="sigla_estado"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="pais_id">País</label>
+              <select id="pais_id" name="pais_id" class="form-control">
+                <option value="">Selecione o país</option>
+                {% for pais in paises %}
+                <option value="{{ pais.id }}">{{ pais.nome_pais }}</option>
+                {% endfor %}
+                <option value="new">Novo País</option>
+              </select>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <a
+          href="javascript:abrirModal('#modal-cidade')"
+          class="btn btn-secondary"
+          >Cancelar</a
+        >
+        <button
+          type="button"
+          onclick="salvarEstado()"
+          class="btn btn-success"
+        >
+          Salvar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modal-pais" tabindex="2" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Cadastrar novo País</h3>
+      </div>
+      <div class="modal-body">
+        <p class="lead">Preencha todos os campos obrigatórios!</p>
+        <form method="POST">
+          {% csrf_token %}
+          <input name="id" id="id" type="hidden"/>
+          <div class="fields row pb-3">
+            <div class="field col-6">
+              <label for="nome_pais">Nome</label>
+              <input
+                id="nome_pais"
+                type="text"
+                name="nome_pais"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="sigla_pais">Sigla</label>
+              <input
+                id="sigla_pais"
+                type="text"
+                name="sigla_pais"
+                class="form-control"
+              />
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <a
+          href="javascript:abrirModal('#modal-estado')"
+          class="btn btn-secondary"
+          >Cancelar</a
+        >
+        <button
+          type="button"
+          onclick="salvarPais()"
+          class="btn btn-success"
+        >
+          Salvar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const estadoSelectComp = document.querySelector("#estado_id");
+  const paisSelect = document.querySelector("#pais_id");
+
+  estadoSelectComp.addEventListener("change", (e) => {
+    if (e.target.value == "new")
+      abrirModal("#modal-estado");
+  });
+
+  paisSelect.addEventListener("change", (e) => {
+    if (e.target.value == "new")
+      abrirModal("#modal-pais");
+  });
+</script>

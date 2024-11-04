@@ -1,0 +1,69 @@
+<script>
+  async function abrirModalParcelas(condicaoID) {
+    const response = await fetch(
+      `{% url "pagamento:condicao-manage" 0 %}`.replace("0", condicaoID)
+    )
+
+    if (!response.ok) {
+      alert("Erro ao buscar parcelas da condição de pagamento");
+      return;
+    }
+
+    abrirModal("#modal-condicao-parcelas");
+    const { parcelas } = await response.json();
+    parcelas.forEach(parcela => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${parcela.numero_parcela}</td>
+        <td>${parcela.dia_pgto_parcela}</td>
+        <td>${parcela.porcentagem_pgto_parcela}</td>
+        <td>${parcela.desconto_pgto_parcela}</td>
+        <td>${parcela.juros_pgto_parcela}</td>
+        <td>${parcela.multa_pgto_parcela}</td>
+        <td>${parcela.forma_pgto_id}</td>
+      `;
+      document.querySelector("#modal-condicao-parcelas tbody").appendChild(tr);
+    })
+
+    if (parcelas.length === 0) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = "<td class='text-center' colspan='7'>Nenhuma parcela encontrada</td>";
+      document.querySelector("#modal-condicao-parcelas tbody").appendChild(tr);
+    }
+  }
+
+  function fecharModalParcelas() {
+    fecharModal('#modal-condicao-parcelas');
+    document.querySelector("#modal-condicao-parcelas table tbody").innerHTML = "";
+  }
+</script>
+
+<div class="modal fade" id="modal-condicao-parcelas" tabindex="2" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+          <div class="modal-header">
+              <h3>Parcelas da condição</h3>
+          </div>
+          <div class="modal-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Parcela</th>
+                  <th>Dias</th>
+                  <th>Porcentagem de pagamento</th>
+                  <th>Desconto</th>
+                  <th>Juros</th>
+                  <th>Multa</th>
+                  <th>Forma de Pagamento</th>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          </div>
+          <div class="modal-footer">
+            <button type="button" onclick="fecharModalParcelas()" class="btn btn-secondary">Fechar</button>
+          </div>
+      </div>
+  </div>
+</div>

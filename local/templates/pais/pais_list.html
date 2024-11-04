@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% load static format_date %}
+
+{% block page_title %}Países{%endblock page_title %}
+
+{% block content %}
+<h1>Lista de Países</h1>
+
+{% if paises %}
+  <table class="table table-hover">
+    <thead>
+      <tr class="table-light">
+        <th scope="col">Cod</th>
+        <th scope="col">País</th>
+        <th scope="col">Sigla</th>
+        <th scope="col">Data de Cadastro</th>
+        <th scope="col">Última alteração</th>
+        <th scope="col">Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for pais in paises %}
+      <tr>
+        <th scope="row">{{pais.id}}</th>
+        <td>{{pais.nome_pais}}</td>
+        <td>{{pais.sigla_pais | default:"-"}}</td>
+        <td>{{pais.data_cadastro|format_date}}</td>
+        <td>{{pais.data_ultima_alteracao|format_date}}</td>
+        <td>
+          <a href="javascript:editarPais('{{pais.id}}')" class="btn btn-sm btn-warning"
+            >Editar</a
+          >
+          <a
+            href="javascript:deletePais('{{pais.id}}')"
+            class="btn btn-sm btn-danger"
+            >Excluir</a
+          >
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p>Sem dados cadastrados</p>
+{% endif %}
+
+<a href="javascript:abrirModal('#modal-pais')" class="btn btn-primary"
+  >Novo cadastro</a
+>
+
+{% include 'pais/pais_modal.html' %}
+
+<script>
+  function deletePais(paisID) {
+    if (!confirm("Deseja realmente excluir este país?")) return;
+
+    fetch(`${paisID}/`, {
+      method: "DELETE",
+    }).then((response) => {
+      const responsePromise = response.text();
+      responsePromise.then((responseData) => {
+        if (response.status === 400) {
+          alert(responseData);
+          return;
+        }
+        if (response.ok) {
+          window.location.reload();
+        }
+      });
+    });
+  }
+</script>
+{% endblock content %}

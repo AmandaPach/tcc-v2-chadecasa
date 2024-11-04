@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% load static format_date %}
+
+{% block page_title %}Compras{% endblock page_title %}
+
+{% block content %}
+
+<h1>Lista de Compras</h1>
+{% if compras %}
+<table class="table table-hover">
+  <thead>
+    <tr class="table-light">
+      
+      <th scope="col">Nota Fiscal</th>
+      <th scope="col">Modelo da Nota</th>
+      <th scope="col">Série da Nota</th>
+      <th scope="col">Fornecedor</th>
+      <th scope="col">Total</th>
+      <th scope="col">Data Emissão</th>
+      <th scope="col">Data Chegada</th>
+      <th scope="col">Ações</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for compra in compras %}
+    <tr>
+      <td>{{compra.nota_fiscal}}</td>
+      <td>{{compra.modelo_nota}}</td>
+      <td>{{compra.serie}}</td>
+      <td>{{compra.fornecedor_nome}}</td>
+      <td>{{compra.valor_total}}</td>
+      <td>{{compra.data_emissao|format_date}}</td>
+      <td>{{compra.data_chegada|format_date}}</td>
+      <td>
+        <a href="#" class="btn btn-sm btn-warning"
+          >Editar</a
+        >
+        <a href="#" class="btn btn-sm btn-danger">Excluir</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+  <p>Sem dados cadastrados</p>
+{% endif %}
+
+{% include 'compras/compra_modal.html' %}
+{% include 'compras/modais/modal_produto.html' %}
+{% include 'compras/modais/modal_fornecedor.html' %}
+{% include 'compras/modais/modal_condicao.html' %}
+{% include 'compras/modais/modal_forma_pagamento.html' %}
+
+<button class="btn btn-primary" onclick="abrirModal('#modal-compras')">
+  Novo Cadastro
+</button>
+
+<script src="{% static 'js/compras/compras.js' %}"></script>
+
+{% endblock content %}

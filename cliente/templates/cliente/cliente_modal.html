@@ -1,0 +1,241 @@
+<script>
+  async function salvarCliente() {
+    const form = document.querySelector("#modal-cliente form");
+    const formData = new FormData(form);
+    const response = await fetch('{% url "cliente:list" %}', {
+      method: "POST",
+      body: formData,
+    });
+    if (response.ok) {
+      window.location.reload();
+      return;
+    }
+
+    if (response.status === 400) {
+      const responseText = await response.text();
+      alert(responseText);
+      return;
+    }
+  }
+
+  async function editarCliente(clienteID) {
+    const response = await fetch(
+      `{% url "cliente:manage" 0 %}`.replace("0", clienteID)
+    );
+    if (!response.ok) {
+      alert("Erro ao buscar cliente");
+      return;
+    }
+
+    const clienteResponse = response.json();
+    clienteResponse.then(clienteContent => {
+      const clienteID = clienteContent.id;
+      $("#modal-cliente").modal("show");
+
+      const form = document.querySelector("#modal-cliente form");
+      for (const key in clienteContent) {
+        let input = form.querySelector(`#${key}`);
+        if (!input) {
+          input = form.querySelector(`[name=${key}_cliente]`);
+        }
+        if (!input) {
+          console.log(`Campo ${key} não encontrado`);
+          continue;
+        }
+        if (input.type == "checkbox") {
+          input.checked = clienteContent[key] != 'False';
+          return;
+        }
+        input.value = clienteContent[key];
+      }
+    })
+  }
+</script>
+
+<div class="modal fade" id="modal-cliente" tabindex="2" role="dialog">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Cadastrar novo cliente</h3>
+      </div>
+      <div class="modal-body">
+        <p class="lead">Preencha todos os campos obrigatórios!</p>
+        <form method="POST">
+          {% csrf_token %}
+          <input type="hidden" name="id" id="id"/>
+          <div class="field col-12 border rounded text-center py-2">
+            <input type="checkbox" name="status" class="form-check-input" id="status" checked="true"/>
+            <label class="form-check-label" for="status">Ativo</label>
+          </div>
+          <div class="fields row pb-3">
+            <div class="field col-6">
+              <label for="nome_cliente">Nome</label>
+              <input
+                maxlength="40"
+                id="nome_cliente"
+                type="text"
+                name="nome_cliente"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="sobrenome_cliente">Sobrenome</label>
+              <input
+                maxlength="100"
+                id="sobrenome_cliente"
+                type="text"
+                name="sobrenome_cliente"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="sexo_cliente">Sexo</label>
+              <select
+                id="sexo_cliente"
+                name="sexo_cliente"
+                class="form-control"
+                required
+              >
+                <option value="">Selecione o sexo</option>
+                <option value="male">Masculino</option>
+                <option value="female">Feminino</option>
+                <option value="other">Outro</option>
+              </select>
+            </div>
+            <div class="field col-6">
+              <label for="telefone_cliente">Telefone</label>
+              <input
+                id="telefone_cliente"
+                type="phone"
+                data-type="phone"
+                name="telefone_cliente"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="data_nascimento_cliente">Data de nascimento</label>
+              <input
+                id="data_nascimento_cliente"
+                type="date"
+                data-type="pastdate"
+                name="data_nascimento_cliente"
+                class="form-control"
+              />
+            </div>
+            <div class="field col-6 mt-4">
+              <input
+                id="estrangeiro_cliente"
+                type="checkbox"
+                name="estrangeiro_cliente"
+                class="form-check-input"
+              />
+              <label class="form-check-label" for="estrangeiro_cliente"
+                >Sou estrangeiro</label
+              >
+            </div>
+            <div class="field col-6">
+              <label for="cpf_cliente">CPF</label>
+              <input
+                id="cpf_cliente"
+                data-type="cpf"
+                type="text"
+                name="cpf_cliente"
+                class="form-control"
+              />
+            </div>
+            <div class="field col-6">
+              <label for="rg_cliente">RG</label>
+              <input
+                id="rg_cliente"
+                type="number"
+                name="rg_cliente"
+                class="form-control"
+              />
+            </div>
+            <div class="field col-6">
+              <label for="rua_cliente">Rua</label>
+              <input
+                id="rua_cliente"
+                maxlegnth="100"
+                type="text"
+                name="rua_cliente"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="cep_cliente">CEP</label>
+              <input
+                id="cep_cliente"
+                maxlegnth="10"
+                type="number"
+                data-type="cep"
+                name="cep_cliente"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="bairro_cliente">Bairro</label>
+              <input
+                id="bairro_cliente"
+                type="text"
+                name="bairro_cliente"
+                maxlegnth="40"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="numero_rua_cliente">Número</label>
+              <input
+                id="numero_rua_cliente"
+                maxlength="10"
+                type="number"
+                name="numero_rua_cliente"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="complemento_cliente">Complemento</label>
+              <input
+                id="complemento_cliente"
+                maxlength="100"
+                type="text"
+                name="complemento_cliente"
+                class="form-control"
+              />
+            </div>
+            <div class="field col-6">
+              <label for="cidade_id">Cidade</label>
+              <select id="cidade_id" name="cidade_id" class="form-control" required>
+                <option value="">Selecione uma cidade</option>
+                {% for cidade in cidades %}
+                  <option value="{{cidade.id}}">{{cidade.nome_cidade}}</option>
+                {%endfor%}
+              </select>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <a
+          href="javascript:fecharModal('#modal-cliente')"
+          class="btn btn-secondary"
+          >Cancelar</a
+        >
+        <button
+          type="button"
+          onclick="salvarCliente()"
+          class="btn btn-success"
+        >
+          Salvar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

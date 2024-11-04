@@ -1,0 +1,337 @@
+<script>
+  async function salvarProduto() {
+    const form = document.querySelector("#modal-produto form");
+    const formData = new FormData(form);
+    const response = await fetch('{% url "produtos:list" %}', {
+      method: "POST",
+      body: formData,
+    });
+    if (response.ok) {
+      window.location.reload();
+      return;
+    }
+    if (response.status == 400) {
+      const responseText = await response.text();
+      alert(responseText);
+      return;
+    }
+  }
+
+  async function editarProduto(produtoID) {
+    const response = await fetch(
+      `{% url "produtos:manage" 0 %}`.replace("0", produtoID)
+    );
+
+    if (!response.ok) {
+      alert("Erro ao buscar Produto");
+      return;
+    }
+
+    const produtoResponse = response.json();
+    produtoResponse.then(produtoContent => {
+      $("#modal-produto").modal("show");
+
+      const form = document.querySelector("#modal-produto form");
+      for (const key in produtoContent) {
+        let input = form.querySelector(`#${key}`);
+        if (!input) {
+          input = form.querySelector(`[name=${key}_produto]`);
+        }
+        if (!input) {
+          console.log(`Campo ${key} não encontrado`);
+          continue;
+        }
+        if (input.type == "checkbox") {
+          input.checked = clienteContent[key] != 'False';
+          return;
+        }
+        input.value = produtoContent[key];
+      }
+    });
+  }
+
+  async function salvarTipoProduto() {
+    const form = document.querySelector("#modal-tipo-produto form");
+    const formData = new FormData(form);
+    const response = await fetch('{% url "produtos:tipo-produto-list" %}', {
+      method: "POST",
+      body: formData,
+    });
+
+    if (response.ok) {
+      const tipoProdutoSelect = document.querySelector('#tipo_id');
+      const tipoProdutoOption = document.createElement('option');
+      const responseData = await response.json();
+      console.log(responseData);
+      tipoProdutoOption.textContent = responseData["nome_tipo"];
+      tipoProdutoOption.value = responseData.id;
+      tipoProdutoSelect.appendChild(tipoProdutoOption);
+      tipoProdutoSelect.value = responseData.id;
+      abrirModal("#modal-produto");
+      return;
+    }
+
+    if (response.status == 400) {
+      const responseText = await response.text();
+      alert(responseText);
+      return;
+    }
+  }
+
+  async function salvarCategoria() {
+    const form = document.querySelector("#modal-categoria form");
+    const formData = new FormData(form);
+    const response = await fetch('{% url "produtos:categoria-list" %}', {
+      method: "POST",
+      body: formData,
+    });
+    if (response.ok) {
+      const categoriaSelect = document.querySelector('#categoria_id');
+      const categoriaOption = categoriaSelect.querySelector('option[value="new"]');
+      const responseData = await response.json();
+      categoriaOption.textContent = responseData["nome_categoria"];
+      categoriaSelect.value = responseData.id;
+      abrirModal("#modal-produto");
+      return;
+    }
+
+    if (response.status == 400) {
+      const responseText = await response.text();
+      alert(responseText);
+      return;
+    }
+  }
+</script>
+
+<div class="modal fade" id="modal-produto" tabindex="2" role="dialog">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Cadastrar novo produto</h3>
+      </div>
+      <div class="modal-body">
+        <p class="lead">Preencha todos os campos obrigatórios!</p>
+        <form method="POST">
+          {% csrf_token %}
+          <input type="hidden" name="id" id="id" />
+          <div class="fields row pb-3">
+            <div class="field col-12">
+              <label for="nome_produto">Nome do Produto</label>
+              <input
+                id="nome_produto"
+                type="text"
+                name="nome_produto"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="descricao_produto">Descrição</label>
+              <input
+                id="descricao_produto"
+                type="text"
+                name="descricao_produto"
+                class="form-control"
+              />
+            </div>
+            <div class="field col-6">
+              <label for="preco_custo_produto">Preço de custo</label>
+              <input
+                id="preco_custo_produto"
+                type="number"
+                step=".01"
+                min="0"
+                name="preco_custo_produto"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="preco_venda_produto">Preço de venda</label>
+              <input
+                id="preco_venda_produto"
+                type="number"
+                step=".01"
+                min="0"
+                name="preco_venda_produto"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-6">
+              <label for="unid_medida_produto">Unidade de medida</label>
+              <select
+                class="form-select"
+                id="unid_medida_produto"
+                name="unid_medida_produto"
+                required
+              >
+                <option value="">Selecione uma unidade de medida</option>
+                <option value="UN">Unidade</option>
+                <option value="KG">Quilograma</option>
+                <option value="LT">Litro</option>
+              </select>
+            </div>
+            <div class="field col-6">
+              <label for="categoria_id">Categoria</label>
+              <select class="form-select" id="categoria_id" name="categoria_id" required>
+                <option value="">Selecione uma categoria</option>
+                {% for categoria in categorias %}
+                  <option value="{{ categoria.id }}">
+                    {{ categoria.nome_categoria }}
+                  </option>
+                {% endfor %}
+                <option value="new">Nova categoria</option>
+              </select>
+            </div>
+            <div class="field col-6">
+              <label for="tipo_id">Tipo</label>
+              <select class="form-select" id="tipo_id" name="tipo_id" required>
+                <option value="">Selecione um tipo</option>
+                {% for tipo in tipos %}
+                  <option value="{{ tipo.id }}">{{ tipo.nome_tipo }}</option>
+                {% endfor %}
+                <option value="new">Novo tipo</option>
+              </select>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <a
+          href="javascript:fecharModal('#modal-produto')"
+          class="btn btn-secondary"
+          >Cancelar</a
+        >
+        <button
+          type="button"
+          onclick="salvarProduto()"
+          class="btn btn-success"
+        >
+          Salvar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modal-tipo-produto" tabindex="2" role="dialog">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Cadastrar novo Tipo de produto</h3>
+      </div>
+      <div class="modal-body">
+        <p class="lead">Preencha todos os campos obrigatórios!</p>
+        <form method="POST">
+          {% csrf_token %}
+          <input type="hidden" name="id" id="id" />
+          <div class="fields row pb-3">
+            <div class="field col-12">
+              <label for="nome_categoria">Nome do Tipo</label>
+              <input
+                id="nome_tipo"
+                type="text"
+                name="nome_tipo"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-12">
+              <label for="descricao_tipo">Descrição</label>
+              <input
+                id="descricao_tipo"
+                type="text"
+                name="descricao_tipo"
+                class="form-control"
+              />
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <a
+          href="javascript:abrirModal('#modal-produto')"
+          class="btn btn-secondary"
+          >Cancelar</a
+        >
+        <button
+          type="button"
+          onclick="salvarTipoProduto()"
+          class="btn btn-success"
+        >
+          Salvar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modal-categoria" tabindex="2" role="dialog">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Cadastrar nova categoria</h3>
+      </div>
+      <div class="modal-body">
+        <p class="lead">Preencha todos os campos obrigatórios!</p>
+        <form method="POST">
+          {% csrf_token %}
+          <input type="hidden" id="id" name="id"/>
+          <div class="fields row pb-3">
+            <div class="field col-12">
+              <label for="nome_categoria">Nome da Categoria</label>
+              <input
+                id="nome_categoria"
+                type="text"
+                name="nome_categoria"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="field col-12">
+              <label for="descricao_categoria">Descrição</label>
+              <input
+                id="descricao_categoria"
+                type="text"
+                name="descricao_categoria"
+                class="form-control"
+                required
+              />
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <a
+          href="javascript:abrirModal('#modal-produto')"
+          class="btn btn-secondary"
+          >Cancelar</a
+        >
+        <button
+          type="button"
+          onclick="salvarCategoria()"
+          class="btn btn-success"
+        >
+          Salvar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  const categoriaSelect = document.querySelector("#categoria_id");
+  const tipoSelect = document.querySelector("#tipo_id");
+
+  categoriaSelect.addEventListener("change", e => {
+    if (e.target.value != "new") return;
+    abrirModal("#modal-categoria");
+  })
+
+  tipoSelect.addEventListener('change', e => {
+    if (e.target.value != "new") return;
+    abrirModal("#modal-tipo-produto");
+  })
+</script>
